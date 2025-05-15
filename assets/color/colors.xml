@@ -1,0 +1,10 @@
+<resources>
+    <color name="blackColor">#282A33</color>
+    <color name="blue200">#60A0EF</color>
+    <color name="buttonDisabled">#205376</color>
+    <color name="lightGrey">#EDEDED</color>
+    <color name="mainGrey">#B8B8B8</color>
+    <color name="primaryColor">#337687</color>
+    <color name="textfieldColor">#E7F4FD</color>
+    <color name="whiteColor">#FFFFFF</color>
+</resources>
