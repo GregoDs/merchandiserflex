@@ -259,92 +259,92 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
             ? customer.phone.replaceFirst('254', '80')
             : customer.phone;
     return InkWell(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CustomerProfilePage(customer: customer),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomerProfilePage(customer: customer),
+          ),
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(18),
         ),
-      );
-    },
-    child:Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    customer.name,
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        customer.isFlexsaveCustomer ? "Yes" : "No",
+                        style: GoogleFonts.montserrat(
+                          color:
+                              customer.isFlexsaveCustomer
+                                  ? Colors.green
+                                  : Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    customer.dateCreated,
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  customer.name,
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                Row(
-                  children: [
-                    Text(
-                      customer.isFlexsaveCustomer ? "Yes" : "No",
-                      style: GoogleFonts.montserrat(
-                        color:
-                            customer.isFlexsaveCustomer
-                                ? Colors.green
-                                : Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  customer.dateCreated,
+                  customer.followup?.status ?? "N/A",
                   style: GoogleFonts.montserrat(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                customer.followup?.status ?? "N/A",
-                style: GoogleFonts.montserrat(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () {
-                  // Optionally, copy or call the number
-                },
-                child: Text(
-                  displayPhone,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.blueAccent,
-                    fontSize: 16,
-                    decoration: TextDecoration.underline,
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () {
+                    // Optionally, copy or call the number
+                  },
+                  child: Text(
+                    displayPhone,
+                    style: GoogleFonts.montserrat(
+                      color: Colors.blueAccent,
+                      fontSize: 16,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

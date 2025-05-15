@@ -4,7 +4,7 @@ import 'package:flexmerchandiser/features/customers/models/customers_model.dart'
 
 class CustomerProfilePage extends StatefulWidget {
   final Customer customer;
-  
+
   const CustomerProfilePage({super.key, required this.customer});
 
   @override
@@ -14,12 +14,35 @@ class CustomerProfilePage extends StatefulWidget {
 class _CustomerProfilePageState extends State<CustomerProfilePage> {
   String? _selectedStatus;
   TextEditingController _descriptionController = TextEditingController();
+  bool isLoading = false;
+  PaymentSummary? paymentSummary;
+
+  final List<String> statusOptions = [
+    'Not Contacted',
+    'Contacted',
+    'Interested',
+    'Not Interested',
+    'Follow-up',
+    'Converted',
+    'ANSWERED', // Add all possible API values here
+    // ...add more if needed
+  ];
 
   @override
   void initState() {
     super.initState();
-    _selectedStatus = widget.customer.followup?.status;
+    _selectedStatus = _mapApiStatusToDropdown(widget.customer.followup?.status);
     _descriptionController.text = widget.customer.followup?.description ?? '';
+  }
+
+  String? _mapApiStatusToDropdown(String? apiStatus) {
+    switch (apiStatus) {
+      case 'ANSWERED':
+        return 'Contacted';
+      // Add more mappings as needed
+      default:
+        return apiStatus;
+    }
   }
 
   @override
@@ -42,10 +65,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios_new,
-                        color: Colors.white,
-                      ),
+                      icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
                       onPressed: () => Navigator.of(context).maybePop(),
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints(),
@@ -63,10 +83,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
-                        Icons.notifications_none,
-                        color: Colors.white,
-                      ),
+                      icon: Icon(Icons.notifications_none, color: Colors.white),
                       onPressed: () {},
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints(),
@@ -96,37 +113,99 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                widget.customer.name,
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.amber,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 32,
+                                      backgroundImage: AssetImage(
+                                        'assets/images/profile_placeholder.png',
+                                      ), // or NetworkImage
+                                    ),
+                                  ),
+                                  SizedBox(width: 140),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.customer.name,
+                                          style: GoogleFonts.montserrat(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18, // smaller font
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade900,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.grey.shade800,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Last activity:",
+                                                style: GoogleFonts.montserrat(
+                                                  fontSize: 12,
+                                                  color: Colors.white
+                                                      .withOpacity(0.7),
+                                                ),
+                                              ),
+                                              Text(
+                                                widget
+                                                    .customer
+                                                    .dateCreated, // Replace with actual value
+                                                style: GoogleFonts.montserrat(
+                                                  fontSize: 12,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                "Date Created:",
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                widget.customer.dateCreated,
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  Icon(Icons.phone, color: Colors.blueAccent, size: 20),
+                                  Icon(
+                                    Icons.phone,
+                                    color: Colors.blueAccent,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     widget.customer.phone.startsWith('254')
-                                        ? widget.customer.phone.replaceFirst('254', '80')
+                                        ? widget.customer.phone.replaceFirst(
+                                          '254',
+                                          '80',
+                                        )
                                         : widget.customer.phone,
                                     style: GoogleFonts.montserrat(
                                       color: Colors.blueAccent,
@@ -146,11 +225,14 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                                     ),
                                   ),
                                   Text(
-                                    widget.customer.isFlexsaveCustomer ? "Yes" : "No",
+                                    widget.customer.isFlexsaveCustomer
+                                        ? "Yes"
+                                        : "No",
                                     style: GoogleFonts.montserrat(
-                                      color: widget.customer.isFlexsaveCustomer 
-                                          ? Colors.green 
-                                          : Colors.red,
+                                      color:
+                                          widget.customer.isFlexsaveCustomer
+                                              ? Colors.green
+                                              : Colors.red,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                     ),
@@ -192,24 +274,18 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                                     borderSide: BorderSide.none,
                                   ),
                                 ),
-                                items: [
-                                  'Not Contacted',
-                                  'Contacted',
-                                  'Interested',
-                                  'Not Interested',
-                                  'Follow-up',
-                                  'Converted',
-                                ].map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(
-                                      value,
-                                      style: GoogleFonts.montserrat(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                items:
+                                    statusOptions.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                 onChanged: (newValue) {
                                   setState(() {
                                     _selectedStatus = newValue;
@@ -217,16 +293,18 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                                 },
                               ),
                               const SizedBox(height: 16),
-                              if (_selectedStatus == 'Contacted' || 
-                                  _selectedStatus == 'Interested' ||
-                                  _selectedStatus == 'Follow-up')
+                              if (_selectedStatus == 'ANSWERED')
                                 TextField(
                                   controller: _descriptionController,
                                   maxLines: 3,
-                                  style: GoogleFonts.montserrat(color: Colors.white),
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: "Enter description...",
-                                    hintStyle: GoogleFonts.montserrat(color: Colors.white70),
+                                    hintStyle: GoogleFonts.montserrat(
+                                      color: Colors.white70,
+                                    ),
                                     filled: true,
                                     fillColor: Colors.black.withOpacity(0.5),
                                     border: OutlineInputBorder(
@@ -259,32 +337,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                         const SizedBox(height: 16),
 
                         // Payment Summary Section (Dummy Data)
-                        Container(
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade900,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Payment Summary",
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildPaymentInfoRow("Customer Category:", "Regular"),
-                              _buildPaymentInfoRow("Payment Pattern:", "Daily Payments"),
-                              _buildPaymentInfoRow("Total Amount Paid:", "29,995 KES"),
-                              _buildPaymentInfoRow("Average Payment:", "2,999.5 KES"),
-                              _buildPaymentInfoRow("Number of Products:", "1"),
-                            ],
-                          ),
-                        ),
+                        _buildPaymentSummary(),
                         const SizedBox(height: 16),
                       ],
                     ),
@@ -292,6 +345,51 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentSummary() {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    if (paymentSummary == null) {
+      return Text(
+        "No payment summary found.",
+        style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 14),
+      );
+    }
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Payment Summary",
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 12),
+          _buildPaymentInfoRow(
+            "Customer Category:",
+            paymentSummary!.customerCategory,
+          ),
+          _buildPaymentInfoRow(
+            "Payment Pattern:",
+            paymentSummary!.paymentPattern,
+          ),
+          _buildPaymentInfoRow(
+            "Average Payment:",
+            paymentSummary!.averagePayment,
           ),
         ],
       ),
@@ -306,10 +404,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
         children: [
           Text(
             label,
-            style: GoogleFonts.montserrat(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+            style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 16),
           ),
           Text(
             value,

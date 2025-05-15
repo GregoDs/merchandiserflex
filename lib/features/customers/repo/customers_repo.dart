@@ -51,4 +51,36 @@ class CustomerRepo {
       rethrow;
     }
   }
+
+  Future<void> updateFollowUpStatus({
+    required String userId,
+    required String status,
+    String? description,
+  }) async {
+    final response = await _apiService.post(
+      'https://www.flexpay.co.ke/users/api/merchandizer/customer-followup',
+      data: {
+        'user_id': userId,
+        'status': status,
+        'description': description ?? '',
+      },
+    );
+    // You can parse and return the updated followup if needed
+    return response.data;
+  }
+
+  Future<PaymentSummary?> fetchPaymentSummary(String phone) async {
+    final response = await _apiService.get(
+      'https://bookings.flexpay.co.ke/api/booking/customer-summary/$phone',
+      requiresAuth: true,
+    );
+    if (response.statusCode == 200) {
+      final data = response.data;
+      if (data['data'] != null && data['data']['payment_summary'] != null) {
+        return PaymentSummary.fromJson(data['data']['payment_summary']);
+      }
+    }
+    return null;
+  }
 }
+

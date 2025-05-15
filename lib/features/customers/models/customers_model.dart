@@ -151,3 +151,23 @@ class PaginationInfo {
     );
   }
 }
+
+class PaymentSummary {
+  final String customerCategory;
+  final String paymentPattern;
+  final String averagePayment;
+
+  PaymentSummary({
+    required this.customerCategory,
+    required this.paymentPattern,
+    required this.averagePayment,
+  });
+
+  factory PaymentSummary.fromJson(Map<String, dynamic> json) {
+    return PaymentSummary(
+      customerCategory: json['customer_category']?.toString() ?? 'N/A',
+      paymentPattern: json['payment_pattern']?.toString() ?? 'N/A',
+      averagePayment: json['average_payment']?.toString() ?? 'N/A',
+    );
+  }
+}

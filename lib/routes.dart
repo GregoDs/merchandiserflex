@@ -1,3 +1,5 @@
+import 'package:flexmerchandiser/features/customers/models/customers_model.dart';
+import 'package:flexmerchandiser/features/customers/ui/customer_profile.dart';
 import 'package:flexmerchandiser/features/home/ui/home.dart';
 import 'package:flexmerchandiser/features/home/cubit/home_cubit.dart';
 import 'package:flexmerchandiser/features/home/repo/home_repo.dart';
@@ -67,6 +69,13 @@ class AppRoutes {
         child: CustomerDetailsPage(outletId: outletId),
       );
     },
+    Routes.customerProfile: (context) {
+      final customer = ModalRoute.of(context)!.settings.arguments as Customer;
+      return BlocProvider(
+        create: (_) => CustomersCubit(customerRepo: CustomerRepo()),
+        child: CustomerProfilePage(customer: customer),
+      );
+    },
   };
 }
 
@@ -83,4 +92,5 @@ class Routes {
   static const commissions = '/commissions';
   static const leaderboard = '/leaderboard';
   static const bookingDetails = '/booking-details';
+  static const customerProfile = '/customer-profile';
 }
