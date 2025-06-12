@@ -5,119 +5,118 @@ class ShimmerCustomerRow extends StatelessWidget {
   final double screenWidth;
 
   const ShimmerCustomerRow({Key? key, required this.screenWidth})
-      : super(key: key);
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    print("Building ShimmerCustomerRow");
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    // Define colors based on theme
+    final baseColor = isDarkMode ? Colors.grey[900]! : Colors.grey[600]!;
+    final highlightColor = isDarkMode ? Colors.grey[800]! : Colors.grey[400]!;
+    final containerColor = isDarkMode ? Colors.grey[900]! : Colors.grey[900];
 
-    // Get system brightness to switch between light & dark mode
-    final isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
-
-    // Colors for shimmer effect (adjusted for dark/light mode)
-    final baseColor = isDarkMode ? Colors.grey[700]! : Colors.grey[850]!;
-    final highlightColor = isDarkMode ? Colors.grey[500]! : Colors.grey[100]!;
-
-    return Column(
-      children: List.generate(
-        4,
-        (index) {
-          print("Building row index: $index");
-          return _ShimmerRow(
-            baseColor: baseColor,
-            highlightColor: highlightColor,
-            screenWidth: screenWidth,
-            isDarkMode: isDarkMode,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: List.generate(6, (index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: containerColor,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left side - Name and details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name shimmer
+                      Shimmer.fromColors(
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                        child: Container(
+                          height: 20,
+                          width: 150,
+                          decoration: BoxDecoration(
+                            color: baseColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Flexsave status shimmer
+                      Shimmer.fromColors(
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                        child: Container(
+                          height: 16,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: baseColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Date shimmer
+                      Shimmer.fromColors(
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                        child: Container(
+                          height: 14,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            color: baseColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Right side - Status and phone
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Status shimmer
+                    Shimmer.fromColors(
+                      baseColor: baseColor,
+                      highlightColor: highlightColor,
+                      child: Container(
+                        height: 14,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: baseColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Phone number shimmer
+                    Shimmer.fromColors(
+                      baseColor: baseColor,
+                      highlightColor: highlightColor,
+                      child: Container(
+                        height: 16,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: baseColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           );
-        },
-      ),
-    );
-  }
-}
-
-class _ShimmerRow extends StatelessWidget {
-  const _ShimmerRow({
-    required this.baseColor,
-    required this.highlightColor,
-    required this.screenWidth,
-    required this.isDarkMode,
-  });
-
-  final Color baseColor;
-  final Color highlightColor;
-  final double screenWidth;
-  final bool isDarkMode;
-
-  @override
-  Widget build(BuildContext context) {
-    print("Building _ShimmerRow");
-
-    return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
-        padding: EdgeInsets.all(screenWidth * 0.04),
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[850] : Colors.grey[850],
-          borderRadius: BorderRadius.circular(screenWidth * 0.03),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Left - Placeholder for Profile Icon
-            Container(
-              height: screenWidth * 0.12,
-              width: screenWidth * 0.12,
-              decoration: BoxDecoration(
-                color: baseColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            SizedBox(width: screenWidth * 0.04),
-
-            // Right - Placeholder for Text
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Container(
-                    height: screenWidth * 0.045,
-                    width: screenWidth * 0.5,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                    ),
-                  ),
-                  SizedBox(height: screenWidth * 0.02),
-
-                  // Subtitle
-                  Container(
-                    height: screenWidth * 0.035,
-                    width: screenWidth * 0.35,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                    ),
-                  ),
-                  SizedBox(height: screenWidth * 0.015),
-
-                  // Extra info
-                  Container(
-                    height: screenWidth * 0.03,
-                    width: screenWidth * 0.4,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        }),
       ),
     );
   }

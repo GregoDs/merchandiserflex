@@ -8,34 +8,57 @@ class ErrorHandler {
           error.response?.data is Map<String, dynamic>) {
         final responseData = error.response?.data;
 
-        //prioritize errors field if it exists
+        // Check for specific validation errors in 'errors' field (can be List or Map)
         if (responseData['errors'] != null) {
           final errors = responseData['errors'];
           if (errors is List && errors.isNotEmpty) {
+            // Handle errors as a list of strings
             return errors.join(', ');
-          }
-          if (errors is String) {
-            return errors; // Return single error message
+          } else if (errors is String) {
+            // Handle errors as a single string
+            return errors;
+          } else if (errors is Map) {
+            // Handle errors as a map (common for validation errors like 422)
+            final errorMessages = <String>[];
+            errors.forEach((key, value) {
+              if (value is List) {
+                errorMessages.add('$key: ${value.join(', ')}');
+              } else if (value is String) {
+                errorMessages.add('$key: $value');
+              } else {
+                errorMessages.add(value.toString());
+              }
+            });
+            if (errorMessages.isNotEmpty) {
+              return errorMessages.join('; ');
+            }
           }
         }
-        // Handle 400 status code with specific error message
+
+        // Handle 400 status code with specific error message in 'data' field
         if (error.response?.statusCode == 400 && responseData['data'] != null) {
           final errorMessage = responseData['data'];
           if (errorMessage is List && errorMessage.isNotEmpty) {
             return errorMessage.join(', '); // Join multiple error messages
-          }
-          if (errorMessage is String) {
+          } else if (errorMessage is String) {
             return errorMessage; // Return single error message
           }
         }
 
         // Handle other status codes with 'message' field
         if (responseData['message'] != null) {
-          return responseData['message'];
+          // Check if message is a string or potentially a list/map that needs formatting
+          final message = responseData['message'];
+          if (message is String) {
+            return message;
+          } else {
+            // Attempt to convert other message types to string or format
+            return message.toString(); // Fallback to string representation
+          }
         }
       }
 
-      // Fallback to status code based error messages
+      // Fallback to status code based error messages if no specific message found in data
       switch (error.response?.statusCode) {
         case 400:
           return "Bad request. Please check your input.";
@@ -46,7 +69,7 @@ class ErrorHandler {
         case 404:
           return "Resource not found. Please try again.";
         case 422:
-          return "Validation error. Please check your input.";
+          return "Validation error. Please check your input."; // Keep as fallback, specific handled above
         case 500:
           return "Internal server error. Please try again later.";
         case 503:
@@ -63,7 +86,13 @@ class ErrorHandler {
     } else if (error.type == DioErrorType.cancel) {
       return "Request was cancelled. Please try again.";
     } else if (error.type == DioErrorType.unknown) {
-      return "Something went wrong. Please check your internet connection.";
+      // Check if there's an underlying OS error, e.g., network issue
+      if (error.error != null && error.error is Object) {
+        // Attempt to extract a more specific message from the underlying error
+        return "Network error: ${error.error.toString()}";
+      } else {
+        return "Something went wrong. Please check your internet connection.";
+      }
     } else {
       return "An unexpected error occurred. Please try again.";
     }

@@ -6,6 +6,10 @@ import 'package:flexmerchandiser/features/home/repo/home_repo.dart';
 import 'package:flexmerchandiser/features/customers/ui/customers.dart';
 import 'package:flexmerchandiser/features/customers/cubit/customers_cubit.dart';
 import 'package:flexmerchandiser/features/customers/repo/customers_repo.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/leads/cubit/leads_cubit.dart';
+import 'features/leads/repo/leads_repo.dart';
+import 'features/leads/ui/add_leads.dart';
 
 import 'exports.dart';
 
@@ -76,6 +80,10 @@ class AppRoutes {
         child: CustomerProfilePage(customer: customer),
       );
     },
+    Routes.addLeads: (context) => BlocProvider(
+      create: (context) => LeadsCubit(LeadsRepo()),
+      child: const AddLeadPage(),
+    ),
   };
 }
 
@@ -86,11 +94,6 @@ class Routes {
   static const otp = '/otp';
   static const home = '/home';
   static const customerDetails = '/customer-details';
-  static const makeBookings = '/make-bookings';
-  static const validatedReceipts = '/validated-receipts';
-  static const bookings = '/bookings';
-  static const commissions = '/commissions';
-  static const leaderboard = '/leaderboard';
-  static const bookingDetails = '/booking-details';
   static const customerProfile = '/customer-profile';
+  static const addLeads = '/add-leads';
 }

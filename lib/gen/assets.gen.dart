@@ -87,6 +87,10 @@ class $AssetsImagesGen {
   /// File path: assets/images/chamatype.json
   String get chamatype => 'assets/images/chamatype.json';
 
+  /// Directory path: assets/images/dashboardimages
+  $AssetsImagesDashboardimagesGen get dashboardimages =>
+      const $AssetsImagesDashboardimagesGen();
+
   /// File path: assets/images/happyafricanlogin.png
   AssetGenImage get happyafricanlogin =>
       const AssetGenImage('assets/images/happyafricanlogin.png');
@@ -136,6 +140,39 @@ class $AssetsImagesGen {
     otpver,
     otpverification,
     success,
+  ];
+}
+
+class $AssetsImagesDashboardimagesGen {
+  const $AssetsImagesDashboardimagesGen();
+
+  /// File path: assets/images/dashboardimages/Car-and-General.png
+  AssetGenImage get carAndGeneral =>
+      const AssetGenImage('assets/images/dashboardimages/Car-and-General.png');
+
+  /// File path: assets/images/dashboardimages/Hotpoint.png
+  AssetGenImage get hotpoint =>
+      const AssetGenImage('assets/images/dashboardimages/Hotpoint.png');
+
+  /// File path: assets/images/dashboardimages/Moko.png
+  AssetGenImage get moko =>
+      const AssetGenImage('assets/images/dashboardimages/Moko.png');
+
+  /// File path: assets/images/dashboardimages/Naivas.png
+  AssetGenImage get naivas =>
+      const AssetGenImage('assets/images/dashboardimages/Naivas.png');
+
+  /// File path: assets/images/dashboardimages/Quickmart.png
+  AssetGenImage get quickmart =>
+      const AssetGenImage('assets/images/dashboardimages/Quickmart.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [
+    carAndGeneral,
+    hotpoint,
+    moko,
+    naivas,
+    quickmart,
   ];
 }
 

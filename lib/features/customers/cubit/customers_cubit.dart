@@ -68,4 +68,34 @@ class CustomersCubit extends Cubit<CustomersState> {
       await fetchCustomers(outletId: _currentOutletId!, refresh: true);
     }
   }
+
+  Future<void> searchCustomers({
+    required String outletId,
+    required String userId,
+    int page = 1,
+    String? customerName,
+    String? phone,
+    String? isFlexsaveCustomer,
+    String? customerFollowup,
+  }) async {
+    emit(CustomersLoading());
+    try {
+      final data = await _customerRepo.searchCustomers(
+        userId: userId,
+        outletId: outletId,
+        page: page,
+        customerName: customerName,
+        phone: phone,
+        isFlexsaveCustomer: isFlexsaveCustomer,
+        customerFollowup: customerFollowup,
+      );
+      emit(CustomersSuccess(
+        data.customers,
+        currentPage: data.pagination.from,
+        totalPages: data.pagination.lastPage,
+      ));
+    } catch (e) {
+      emit(CustomersError(e.toString()));
+    }
+  }
 }

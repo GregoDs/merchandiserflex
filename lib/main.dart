@@ -30,11 +30,11 @@ class MyApp extends StatelessWidget {
               primaryColor: ColorName.primaryColor,
               scaffoldBackgroundColor: ColorName.whiteColor,
             ),
-            darkTheme: ThemeData(
-              brightness: Brightness.dark,
-              primaryColor: ColorName.primaryColor,
-              scaffoldBackgroundColor: const Color(0xFF1A1A1A),
-            ),
+            // darkTheme: ThemeData(
+            //   brightness: Brightness.dark,
+            //   primaryColor: ColorName.primaryColor,
+            //   scaffoldBackgroundColor: const Color(0xFF1A1A1A),
+            // ),
             themeMode: ThemeMode.system,
             routes: AppRoutes.routes,
             // home: const StartupRedirector(),

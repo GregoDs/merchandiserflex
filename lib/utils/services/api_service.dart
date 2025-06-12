@@ -1,12 +1,15 @@
 import 'package:flexmerchandiser/exports.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 
 class ApiService {
   final Dio _dio = Dio(
     BaseOptions(
-      connectTimeout:
-          const Duration(seconds: 30), // Increased from 5 to 30 seconds
-      receiveTimeout:
-          const Duration(seconds: 30), // Increased from 5 to 30 seconds
+      connectTimeout: const Duration(
+        seconds: 30,
+      ), // Increased from 5 to 30 seconds
+      receiveTimeout: const Duration(
+        seconds: 30,
+      ), // Increased from 5 to 30 seconds
       sendTimeout: const Duration(seconds: 30), // Added send timeout
     ),
   );
@@ -16,10 +19,16 @@ class ApiService {
   static String prodEndpointBookings = dotenv.env['PROD_ENDPOINT_BOOKINGS']!;
 
   // Generic GET request
-  Future<Response> get(String url,
-      {Map<String, dynamic>? queryParameters, bool requiresAuth = true}) async {
+  Future<Response> get(
+    String url, {
+    Map<String, dynamic>? queryParameters,
+    bool requiresAuth = true,
+  }) async {
     try {
-      final headers = await _buildHeaders(requiresAuth);
+      final headers = await _buildHeaders(
+        requiresAuth,
+        url,
+      ); // Pass url to buildHeaders
       final response = await _dio.get(
         url,
         queryParameters: queryParameters,
@@ -34,10 +43,16 @@ class ApiService {
   }
 
   // Generic POST request
-  Future<Response> post(String url,
-      {dynamic data, bool requiresAuth = true}) async {
+  Future<Response> post(
+    String url, {
+    dynamic data,
+    bool requiresAuth = true,
+  }) async {
     try {
-      final headers = await _buildHeaders(requiresAuth);
+      final headers = await _buildHeaders(
+        requiresAuth,
+        url,
+      ); // Pass url to buildHeaders
       print("Sending POST to $url with data: ${jsonEncode(data)}"); // Add this
       final response = await _dio.post(
         url,
@@ -53,10 +68,16 @@ class ApiService {
   }
 
   // Generic PUT request
-  Future<Response> put(String url,
-      {Map<String, dynamic>? data, bool requiresAuth = true}) async {
+  Future<Response> put(
+    String url, {
+    Map<String, dynamic>? data,
+    bool requiresAuth = true,
+  }) async {
     try {
-      final headers = await _buildHeaders(requiresAuth);
+      final headers = await _buildHeaders(
+        requiresAuth,
+        url,
+      ); // Pass url to buildHeaders
       final response = await _dio.put(
         url,
         data: data,
@@ -71,10 +92,16 @@ class ApiService {
   }
 
   // Generic DELETE request
-  Future<Response> delete(String url,
-      {Map<String, dynamic>? data, bool requiresAuth = true}) async {
+  Future<Response> delete(
+    String url, {
+    Map<String, dynamic>? data,
+    bool requiresAuth = true,
+  }) async {
     try {
-      final headers = await _buildHeaders(requiresAuth);
+      final headers = await _buildHeaders(
+        requiresAuth,
+        url,
+      ); // Pass url to buildHeaders
       final response = await _dio.delete(
         url,
         data: data,
@@ -89,13 +116,23 @@ class ApiService {
   }
 
   // Build headers with optional token
-  Future<Map<String, String>> _buildHeaders(bool requiresAuth) async {
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-    };
+  Future<Map<String, String>> _buildHeaders(
+    bool requiresAuth, [
+    String? url,
+  ]) async {
+    final headers = <String, String>{'Content-Type': 'application/json'};
 
     if (requiresAuth) {
-      final token = await SharedPreferencesHelper.getToken();
+      String? token;
+      // Check if this is the specific chama products endpoint
+      if (url == 'https://www.flexpay.co.ke/users/api/flex-chama/products') {
+        // Read token directly from .env for this specific endpoint
+        token = dotenv.env['CHAMA_API_TOKEN'];
+      } else {
+        // For all other authenticated requests, use the token from SharedPreferences
+        token = await SharedPreferencesHelper.getToken();
+      }
+
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }

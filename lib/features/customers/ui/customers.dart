@@ -7,6 +7,8 @@ import 'package:flexmerchandiser/features/customers/cubit/customers_state.dart';
 import 'package:flexmerchandiser/features/customers/models/customers_model.dart';
 import 'package:flexmerchandiser/widgets/custom_snackbar.dart';
 import 'package:flexmerchandiser/features/customers/ui/customer_shimmer.dart';
+import 'package:flexmerchandiser/utils/cache/shared_preferences_helper.dart';
+import 'package:flexmerchandiser/features/auth/models/user_model.dart';
 
 class CustomerDetailsPage extends StatefulWidget {
   final String outletId;
@@ -109,7 +111,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                     controller: _searchController,
                     style: GoogleFonts.montserrat(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: "Search for phone number, name, or status",
+                      hintText: "Search by name, phone, flexsave (yes/no), followup",
                       hintStyle: GoogleFonts.montserrat(color: Colors.white70),
                       prefixIcon: Icon(Icons.search, color: Colors.white),
                       filled: true,
@@ -118,12 +120,54 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
-                      suffixIcon: Icon(Icons.grid_view, color: Colors.white),
+                      suffixIcon: BlocBuilder<CustomersCubit, CustomersState>(
+                        builder: (context, state) {
+                          if (state is CustomersLoading) {
+                            return Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              ),
+                            );
+                          }
+                          return IconButton(
+                            icon: Icon(Icons.send, color: Colors.white),
+                            onPressed: () async {
+                              final query = _searchController.text.trim();
+                              // Parse for flexsave search
+                              String? isFlexsave;
+                              String? name;
+                              String? phone;
+                              String? followup;
+                              // Simple parsing: if user types "flexsave:yes" or "flexsave:no"
+                              final flexsaveMatch = RegExp(r'flexsave\s*:\s*(yes|no)', caseSensitive: false).firstMatch(query);
+                              if (flexsaveMatch != null) {
+                                isFlexsave = flexsaveMatch.group(1);
+                              }
+                              // You can add more parsing logic for other fields if needed
+                              // For now, treat the whole query as customer name if not flexsave
+                              if (isFlexsave == null) {
+                                name = query;
+                              }
+                              // Get userId from your auth/session
+                              final userData = await SharedPreferencesHelper.getUserData();
+                              final userId = UserModel.fromJson(userData!).user.id.toString();
+                              context.read<CustomersCubit>().searchCustomers(
+                                outletId: widget.outletId,
+                                userId: userId,
+                                customerName: name,
+                                isFlexsaveCustomer: isFlexsave,
+                                // Add phone/followup if you want to parse them from the query
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.trim().toLowerCase();
-                      });
+                    onSubmitted: (_) {
+                      // Optionally trigger search on keyboard submit
                     },
                   ),
                   const SizedBox(height: 16),

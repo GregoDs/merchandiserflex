@@ -6,15 +6,20 @@ import 'package:flexmerchandiser/features/home/cubit/home_cubit.dart';
 import 'package:flexmerchandiser/features/home/ui/home_shimmer.dart';
 import 'package:flexmerchandiser/features/home/models/outlets_model.dart';
 import 'package:flexmerchandiser/widgets/scaffold_messengers.dart';
+import 'package:flexmerchandiser/widgets/side_menu.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
+  
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _showSideMenu = false;
+
+  
   @override
   void initState() {
     super.initState();
@@ -22,9 +27,33 @@ class _HomePageState extends State<HomePage> {
     context.read<HomeCubit>().fetchOutlets();
   }
 
+
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+    final bool isPortrait = screenHeight > screenWidth;
+    
+    // Calculate responsive dimensions
+    final double basePadding = screenWidth * 0.04; // 4% of screen width
+    final double baseSpacing = screenHeight * 0.02; // 2% of screen height
+    final double baseFontSize = screenWidth * 0.05; // 5% of screen width for base font size
+
     return Scaffold(
+      drawer: SideMenu(
+        name: "Promoter",
+        phone: "Profile",
+        onLogout: () async {
+          setState(() => _showSideMenu = false);
+          // TODO: Add your logout logic here
+        },
+        onDeleteAccount: () {
+          setState(() => _showSideMenu = false);
+          // TODO: Add your delete account logic here
+        },
+        onClose: () => setState(() => _showSideMenu = false), // Pass close callback
+      ),
       body: Stack(
         children: [
           // Background Image
@@ -38,31 +67,31 @@ class _HomePageState extends State<HomePage> {
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(basePadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTopRow(),
-                    SizedBox(height: 16),
+                    _buildTopRow(screenWidth),
+                    SizedBox(height: baseSpacing),
                     Text(
                       "Dashboard",
                       style: TextStyle(
                         fontFamily: 'montserrat',
-                        fontSize: 24,
+                        fontSize: baseFontSize * 1.2,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
-                    _buildSecondRow(),
-                    SizedBox(height: 10),
-                    _buildGraphRow(),
-                    SizedBox(height: 24),
+                    SizedBox(height: baseSpacing * 0.5),
+                    _buildSecondRow(screenWidth),
+                    SizedBox(height: baseSpacing * 0.8),
+                    _buildGraphRow(screenWidth, screenHeight),
+                    SizedBox(height: baseSpacing * 1.5),
                     Text(
                       "Outlets",
                       style: TextStyle(
                         fontFamily: 'montserrat',
-                        fontSize: 18,
+                        fontSize: baseFontSize * 0.9,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -72,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                         if (state is HomeError) {
                           CustomSnackBar.showError(
                             context,
-                            title: "Oops!", // Generic title for error
+                            title: "Oops!",
                             message: state.message,
                           );
                         }
@@ -80,14 +109,11 @@ class _HomePageState extends State<HomePage> {
                       child: BlocBuilder<HomeCubit, HomeState>(
                         builder: (context, state) {
                           if (state is HomeLoading) {
-                            // Show shimmer effect while loading
                             return const HomeShimmer();
                           } else if (state is HomeSuccess) {
-                            // Show outlet cards when data is fetched
                             final List<Outlet> outlets = state.outlets;
-                            return _buildOutletsGrid(outlets);
+                            return _buildOutletsGrid(outlets, screenWidth);
                           } else if (state is HomeError) {
-                            // Show shimmer effect on error
                             return const HomeShimmer();
                           }
                           return const SizedBox.shrink();
@@ -104,94 +130,115 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTopRow() {
+  Widget _buildTopRow(double screenWidth) {
+    final double avatarSize = screenWidth * 0.2;
+    final double spacing = screenWidth * 0.04;
+    
     return Row(
       children: [
-        SizedBox(width: 30),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            // Orange border covering 3/4 of the circle
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: CircularProgressIndicator(
-                value: 0.65, // 3/4 of the circle
-                strokeWidth: 4,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
-                backgroundColor: Colors.transparent,
+        // Drawer Icon
+        Builder(
+          builder: (context) => GestureDetector(
+            onTap: () => Scaffold.of(context).openDrawer(),
+            child: Container(
+              padding: EdgeInsets.all(spacing * 0.5),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-            ),
-            // Profile image
-            CircleAvatar(radius: 35, child: Icon(Icons.person)),
-          ],
-        ),
-        SizedBox(width: 30),
-        // User details
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Good Afternoon",
-              style: TextStyle(
-                fontFamily: 'montserrat',
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
+              child: Image.asset(
+                "assets/images/drawer.png",
+                width: avatarSize * 0.5,
+                height: avatarSize * 0.5,
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 1),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade900,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade800, width: 1),
+          ),
+        ),
+        SizedBox(width: spacing),
+        Stack(
+          alignment: Alignment.center,
+          // children: [
+          //   SizedBox(
+          //     width: avatarSize,
+          //     height: avatarSize,
+          //     child: CircularProgressIndicator(
+          //       value: 0.65,
+          //       strokeWidth: 4,
+          //       valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
+          //       backgroundColor: Colors.transparent,
+          //     ),
+          //   ),
+          //   CircleAvatar(
+          //     radius: avatarSize * 0.4,
+          //     child: Icon(Icons.person, size: avatarSize * 0.4),
+          //   ),
+          // ],
+        ),
+        SizedBox(width: spacing),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Good Afternoon",
+                style: TextStyle(
+                  fontFamily: 'montserrat',
+                  fontSize: screenWidth * 0.06,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Last activity:",
-                    style: TextStyle(
-                      fontFamily: 'montserrat',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white.withOpacity(0.7),
+              SizedBox(height: spacing * 0.3),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: spacing * 0.4,
+                  vertical: spacing * 0.3,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade900,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade800, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Last activity:",
+                      style: TextStyle(
+                        fontFamily: 'montserrat',
+                        fontSize: screenWidth * 0.03,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
                     ),
-                  ),
-                  Text(
-                    "6 Dec, 2025 at 12:43 pm",
-                    style: TextStyle(
-                      fontFamily: 'montserrat',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                    Text(
+                      "6 Dec, 2025 at 12:43 pm",
+                      style: TextStyle(
+                        fontFamily: 'montserrat',
+                        fontSize: screenWidth * 0.03,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _circleIcon(IconData icon) {
+  Widget _buildSecondRow(double screenWidth) {
+    final double spacing = screenWidth * 0.02;
+    
     return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        shape: BoxShape.circle,
+      padding: EdgeInsets.symmetric(
+        horizontal: spacing * 2,
+        vertical: spacing * 1.5,
       ),
-      child: Icon(icon, color: Colors.white),
-    );
-  }
-
-  Widget _buildSecondRow() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade900,
         borderRadius: BorderRadius.circular(14),
@@ -200,52 +247,46 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  _circleIcon(Icons.savings), // Icon for FlexChama
-                  SizedBox(width: 8),
+                  _circleIcon(Icons.savings, screenWidth),
+                  SizedBox(width: spacing),
                   Text(
                     "FlexChama",
                     style: TextStyle(
                       fontFamily: 'montserrat',
-                      fontSize: 16,
+                      fontSize: screenWidth * 0.04,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade800,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      "x2.0",
-                      style: TextStyle(
-                        fontFamily: 'montserrat',
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: spacing,
+                  vertical: spacing * 0.5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "x2.0",
+                  style: TextStyle(
+                    fontFamily: 'montserrat',
+                    fontSize: screenWidth * 0.03,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                ],
+                ),
               ),
             ],
           ),
           SizedBox(height: 1),
-          // Progress Bar with Percentage
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -256,7 +297,7 @@ class _HomePageState extends State<HomePage> {
                     "25% Full",
                     style: TextStyle(
                       fontFamily: 'montserrat',
-                      fontSize: 12,
+                      fontSize: screenWidth * 0.03,
                       color: Colors.white.withOpacity(0.7),
                     ),
                   ),
@@ -264,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                     "\120",
                     style: TextStyle(
                       fontFamily: 'montserrat',
-                      fontSize: 14,
+                      fontSize: screenWidth * 0.03,
                       fontWeight: FontWeight.bold,
                       color: Colors.yellowAccent,
                     ),
@@ -296,15 +337,13 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           SizedBox(height: 16),
-          // Users and Funds Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Users Section
               Row(
                 children: [
-                  _circleIcon(Icons.people), // Icon for Users
-                  SizedBox(width: 8),
+                  _circleIcon(Icons.people, screenWidth),
+                  SizedBox(width: spacing),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -312,7 +351,7 @@ class _HomePageState extends State<HomePage> {
                         "Active Users",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 12,
+                          fontSize: screenWidth * 0.03,
                           color: Colors.white.withOpacity(0.7),
                         ),
                       ),
@@ -321,7 +360,7 @@ class _HomePageState extends State<HomePage> {
                         "67",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 14,
+                          fontSize: screenWidth * 0.03,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -330,11 +369,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              // Funds Section
               Row(
                 children: [
-                  _circleIcon(Icons.people), // Icon for Funds
-                  SizedBox(width: 8),
+                  _circleIcon(Icons.people, screenWidth),
+                  SizedBox(width: spacing),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -342,7 +380,7 @@ class _HomePageState extends State<HomePage> {
                         "Not in chama",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 12,
+                          fontSize: screenWidth * 0.03,
                           color: Colors.white.withOpacity(0.7),
                         ),
                       ),
@@ -351,7 +389,7 @@ class _HomePageState extends State<HomePage> {
                         "3",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 14,
+                          fontSize: screenWidth * 0.03,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -367,34 +405,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGraphRow() {
+  Widget _buildGraphRow(double screenWidth, double screenHeight) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Conversion Activity",
           style: TextStyle(
-            fontFamily: 'montserrat', // Updated font
-            fontSize: 18,
+            fontFamily: 'montserrat',
+            fontSize: screenWidth * 0.045,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: screenHeight * 0.02),
         SizedBox(
-          height: 180,
+          height: screenHeight * 0.25,
           child: LineChart(
             LineChartData(
               gridData: FlGridData(
                 show: true,
                 drawHorizontalLine: true,
-                drawVerticalLine: false, // Disable vertical grid lines
+                drawVerticalLine: false,
                 horizontalInterval: 5,
                 getDrawingHorizontalLine: (value) {
                   return FlLine(
                     color: Colors.grey.shade800,
                     strokeWidth: 1,
-                    dashArray: [5, 5], // Dotted line pattern
+                    dashArray: [5, 5],
                   );
                 },
               ),
@@ -408,7 +446,7 @@ class _HomePageState extends State<HomePage> {
                         return Text(
                           months[value.toInt()],
                           style: TextStyle(
-                            fontFamily: 'montserrat', // Updated font
+                            fontFamily: 'montserrat',
                             fontSize: 12,
                             color: Colors.white70,
                           ),
@@ -427,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                       return Text(
                         value.toInt().toString(),
                         style: TextStyle(
-                          fontFamily: 'montserrat', // Updated font
+                          fontFamily: 'montserrat',
                           fontSize: 12,
                           color: Colors.white70,
                         ),
@@ -443,22 +481,22 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               borderData: FlBorderData(
-                show: false, // Remove the border
+                show: false,
               ),
               lineBarsData: [
                 _lineData(
                   Colors.orangeAccent,
-                  [10, 12, 15, 8, 10, 0], // Dummy data for calls made
+                  [10, 12, 15, 8, 10, 0],
                 ),
                 _lineData(
                   Colors.greenAccent,
-                  [2, 1.5, 2, 1, 2, 0], // Dummy data for customers registered
+                  [2, 1.5, 2, 1, 2, 0],
                 ),
               ],
               minX: 0,
               maxX: 5,
               minY: 0,
-              maxY: 15, // Adjusted to start from 15
+              maxY: 15,
             ),
           ),
         ),
@@ -470,13 +508,13 @@ class _HomePageState extends State<HomePage> {
     return LineChartBarData(
       isCurved: true,
       color: color,
-      barWidth: 4, // Adjusted thickness to match the image
+      barWidth: 4,
       isStrokeCapRound: true,
       dotData: FlDotData(
         show: true,
         getDotPainter: (spot, percent, barData, index) {
           return FlDotCirclePainter(
-            radius: 4, // Rounded dots
+            radius: 4,
             color: color,
             strokeWidth: 2,
             strokeColor: Colors.black,
@@ -488,15 +526,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildOutletsGrid(List<Outlet> outlets) {
+  Widget _buildOutletsGrid(List<Outlet> outlets, double screenWidth) {
+    final double spacing = screenWidth * 0.04;
+    
     return GridView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 26,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.1, // Reduced size
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing * 0.8,
+        childAspectRatio: 1.1,
       ),
       itemCount: outlets.length,
       itemBuilder: (context, index) {
@@ -535,9 +575,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Positioned(
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
+                  bottom: spacing,
+                  left: spacing,
+                  right: spacing,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -545,7 +585,7 @@ class _HomePageState extends State<HomePage> {
                         outlet.outletName ?? "Unknown Outlet",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 14,
+                          fontSize: screenWidth * 0.035,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -556,7 +596,7 @@ class _HomePageState extends State<HomePage> {
                         outlet.locationName ?? "Unknown Location",
                         style: TextStyle(
                           fontFamily: 'montserrat',
-                          fontSize: 12,
+                          fontSize: screenWidth * 0.03,
                           color: Colors.white70,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -570,6 +610,17 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _circleIcon(IconData icon, double screenWidth) {
+    return Container(
+      padding: EdgeInsets.all(screenWidth * 0.03),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: Colors.white, size: screenWidth * 0.05),
     );
   }
 
