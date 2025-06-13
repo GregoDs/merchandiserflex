@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       drawer: SideMenu(
-        name: "Promoter",
+        name: "Merchandiser",
         phone: "Profile",
         onLogout: () async {
           setState(() => _showSideMenu = false);

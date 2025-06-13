@@ -25,6 +25,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   TextEditingController _descriptionController = TextEditingController();
   bool isLoading = false;
   bool isUpdatingStatus = false;
+  bool _didUpdate = false;
   PaymentSummary? paymentSummary;
   final CustomerRepo _customerRepo = CustomerRepo();
   Customer? _updatedCustomer;
@@ -112,6 +113,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
 
       setState(() {
         _updatedCustomer = updatedCustomer;
+        _didUpdate = true;
       });
 
       CustomSnackBar.showSuccess(
@@ -119,6 +121,8 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
         title: 'Success',
         message: 'Status updated successfully',
       );
+      // Pop and return true to trigger refresh in the previous page
+      // Navigator.of(context).pop(true);
     } catch (e) {
       print('❌ Error updating status: $e');
       CustomSnackBar.showError(
@@ -239,7 +243,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                      onPressed: () => Navigator.of(context).maybePop(),
+                      onPressed: () => Navigator.of(context).pop(_didUpdate),
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints(),
                     ),

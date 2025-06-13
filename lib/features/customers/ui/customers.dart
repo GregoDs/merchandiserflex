@@ -276,13 +276,17 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
             ? customer.phone.replaceFirst('254', '80')
             : customer.phone;
     return InkWell(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => CustomerProfilePage(customer: customer),
           ),
         );
+        // If the profile page returns true, refresh the customers list
+        if (result == true) {
+          _jumpToPage(1); // or the current page if you want to preserve pagination
+        }
       },
       child: Container(
         padding: EdgeInsets.all(16),
