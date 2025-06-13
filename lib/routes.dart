@@ -69,14 +69,14 @@ class AppRoutes {
     Routes.customerDetails: (context) {
       final outletId = ModalRoute.of(context)!.settings.arguments as String;
       return BlocProvider(
-        create: (_) => CustomersCubit(customerRepo: CustomerRepo()),
+        create: (_) => CustomersCubit(CustomerRepo()),
         child: CustomerDetailsPage(outletId: outletId),
       );
     },
     Routes.customerProfile: (context) {
       final customer = ModalRoute.of(context)!.settings.arguments as Customer;
       return BlocProvider(
-        create: (_) => CustomersCubit(customerRepo: CustomerRepo()),
+        create: (_) => CustomersCubit(CustomerRepo()),
         child: CustomerProfilePage(customer: customer),
       );
     },

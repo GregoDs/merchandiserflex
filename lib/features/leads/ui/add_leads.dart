@@ -7,6 +7,8 @@ import '../cubit/leads_state.dart';
 import '../models/leads_model.dart';
 import '../../../widgets/loading.dart';
 import '../../../widgets/custom_snackbar.dart';
+import 'package:flexmerchandiser/utils/cache/shared_preferences_helper.dart';
+import 'package:flexmerchandiser/features/auth/models/user_model.dart';
 
 class AddLeadPage extends StatefulWidget {
   const AddLeadPage({super.key});
@@ -69,12 +71,24 @@ class _AddLeadPageState extends State<AddLeadPage> with SingleTickerProviderStat
     });
   }
 
-  void _submit(BuildContext context) {
+  void _submit(BuildContext context) async {
     setState(() => _submitted = true);
     if (_formKey.currentState?.validate() ?? false) {
+      // Fetch user data from shared preferences
+      final userData = await SharedPreferencesHelper.getUserData();
+      if (userData == null) {
+        CustomSnackBar.showError(
+          context,
+          title: "Error",
+          message: "User not logged in.",
+        );
+        return;
+      }
+      final userId = UserModel.fromJson(userData).user.id.toString();
+
       final cubit = context.read<LeadsCubit>();
       final lead = LeadRequest(
-        promoterUserId: "4",
+        promoterUserId: userId,
         customerPhone: _phoneController.text.trim(),
         customerFirstName: _firstNameController.text.trim(),
         customerLastName: _lastNameController.text.trim(),

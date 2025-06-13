@@ -88,7 +88,7 @@ class CustomerRepo {
     int page = 1,
     String? customerName,
     String? phone,
-    String? isFlexsaveCustomer, // "yes" or "no" from UI, will convert to 1/0
+    String? isFlexsaveCustomer,
     String? customerFollowup,
   }) async {
     try {
@@ -142,4 +142,5 @@ class CustomerRepo {
       rethrow;
     }
   }
+
 }

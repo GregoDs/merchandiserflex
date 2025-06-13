@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flexmerchandiser/routes.dart';
+import 'package:flexmerchandiser/utils/cache/shared_preferences_helper.dart';
+import 'package:flexmerchandiser/features/auth/repo/auth_repo.dart'; // <-- Add this import
 
 
 class SideMenu extends StatefulWidget {
@@ -7,7 +10,7 @@ class SideMenu extends StatefulWidget {
   final String? phone;
   final VoidCallback onLogout;
   final VoidCallback onDeleteAccount;
-  final VoidCallback? onClose; // Add this
+  final VoidCallback? onClose; 
 
   const SideMenu({
     super.key,
@@ -23,6 +26,7 @@ class SideMenu extends StatefulWidget {
 }
 
 class _SideMenuState extends State<SideMenu> {
+  final AuthRepo _authRepo = AuthRepo(); 
   int selectedItem = -1;
 
   final List<_SideMenuItem> menuItems = [
@@ -47,6 +51,58 @@ class _SideMenuState extends State<SideMenu> {
       subItems: ['View Rankings'],
     ),
   ];
+
+
+
+
+  Future<void> _deleteAccount() async {
+    try {
+      final response = await _authRepo.deleteAccount();
+      await SharedPreferencesHelper.logout();
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          Routes.onboarding,
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    }
+  }
+
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text(
+            "Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteAccount();
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -208,18 +264,28 @@ class _SideMenuState extends State<SideMenu> {
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: ListTile(
-                  onTap: widget.onLogout,
-                  leading: Icon(Icons.power_settings_new, color: Colors.white),
-                  title: const Text(
-                    "Logout",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontFamily: 'montserrat',
-                    ),
+               child: ListTile(
+                onTap: () async {
+                  await SharedPreferencesHelper.logout();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, Routes.login);
+                  }
+                },
+                leading: Icon(
+                  CupertinoIcons.power,
+                  color: Colors.white,
+                  size: 24.0,
+                ),
+                title: Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15.0,
+                    fontFamily: 'montserrat',
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+               ),
               ),
               // Delete Account Button
               Container(
@@ -229,7 +295,7 @@ class _SideMenuState extends State<SideMenu> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  onTap: widget.onDeleteAccount,
+                  onTap: _confirmDeleteAccount,
                   leading: const Icon(Icons.delete_forever, color: Colors.redAccent),
                   title: const Text(
                     "Delete Account",

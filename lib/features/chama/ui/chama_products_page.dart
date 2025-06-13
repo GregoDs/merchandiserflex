@@ -6,6 +6,8 @@ import 'package:flexmerchandiser/features/chama/cubit/chama_subscription_cubit.d
 import 'package:flexmerchandiser/features/chama/cubit/chama_subscription_state.dart';
 import 'package:flexmerchandiser/features/chama/repo/chama_repo.dart'; // Needed for BlocProvider
 import 'package:flexmerchandiser/widgets/custom_snackbar.dart';
+import 'package:lottie/lottie.dart';
+import 'package:flexmerchandiser/widgets/loading.dart';
 
 class ChamaProductsPage extends StatefulWidget {
   final List<ChamaProduct> products;
@@ -21,14 +23,27 @@ class ChamaProductsPage extends StatefulWidget {
   State<ChamaProductsPage> createState() => _ChamaProductsPageState();
 }
 
-class _ChamaProductsPageState extends State<ChamaProductsPage> {
+class _ChamaProductsPageState extends State<ChamaProductsPage>
+    with SingleTickerProviderStateMixin {
   int? _selectedProductId;
   final TextEditingController _depositAmountController =
       TextEditingController();
+  bool _showAnimation = false;
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
 
   @override
   void dispose() {
     _depositAmountController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -166,16 +181,24 @@ class _ChamaProductsPageState extends State<ChamaProductsPage> {
       body: BlocListener<ChamaSubscriptionCubit, ChamaSubscriptionState>(
         listener: (context, state) {
           if (state is ChamaSubscriptionSuccess) {
+            setState(() {
+              _showAnimation = true;
+            });
+            _animationController.forward().then((_) {
+              Future.delayed(const Duration(seconds: 2), () {
+                if (mounted) {
+                  setState(() {
+                    _showAnimation = false;
+                  });
+                  _animationController.reset();
+                }
+              });
+            });
             CustomSnackBar.showSuccess(
               context,
               title: 'Success',
               message: 'Successfully subscribed to chama!',
             );
-            // Navigate back to the CustomerProfilePage
-            Navigator.popUntil(
-              context,
-              (route) => route.settings.name == '/customer-profile',
-            ); // Assuming customer profile route name is /customerProfile
           } else if (state is ChamaSubscriptionError) {
             CustomSnackBar.showError(
               context,
@@ -184,99 +207,129 @@ class _ChamaProductsPageState extends State<ChamaProductsPage> {
             );
           }
         },
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: padding, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Available Products",
-                style: GoogleFonts.montserrat(
-                  fontSize: screenWidth * 0.07,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: widget.products.length,
-                itemBuilder: (context, index) {
-                  final product = widget.products[index];
-                  final bool isSelected = _selectedProductId == product.id;
-                  return GestureDetector(
-                    onTap: () => _selectProduct(product.id),
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 15),
-                      padding: EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected
-                                ? Colors.orange.withOpacity(0.1)
-                                : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color:
-                              isSelected ? Colors.orange : Colors.transparent,
-                          width: 2,
+        child: BlocBuilder<ChamaSubscriptionCubit, ChamaSubscriptionState>(
+          builder: (context, state) {
+            if (state is ChamaSubscriptionLoading) {
+              return const LoadingPage(
+                color: Colors.white,
+                message: "Processing deposit...",
+              );
+            }
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: padding, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Available Products",
+                        style: GoogleFonts.montserrat(
+                          fontSize: screenWidth * 0.07,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.name,
-                            style: GoogleFonts.montserrat(
-                              fontSize: screenWidth * 0.045,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            'Monthly Price: \Kshs ${product.monthlyPrice}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: screenWidth * 0.04,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            'Target Amount: \Kshs ${product.targetAmount}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: screenWidth * 0.04,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          if (isSelected) ...[
-                            SizedBox(height: 15),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: ElevatedButton(
-                                onPressed: () => _showDepositDialog(product.id),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueAccent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Join Chama',
-                                  style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                  ),
+                      SizedBox(height: 20),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: widget.products.length,
+                        itemBuilder: (context, index) {
+                          final product = widget.products[index];
+                          final bool isSelected = _selectedProductId == product.id;
+                          return GestureDetector(
+                            onTap: () => _selectProduct(product.id),
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 15),
+                              padding: EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Colors.orange.withOpacity(0.1)
+                                        : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color:
+                                      isSelected ? Colors.orange : Colors.transparent,
+                                  width: 2,
                                 ),
                               ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.name,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: screenWidth * 0.045,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    'Monthly Price: \Kshs ${product.monthlyPrice}',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: screenWidth * 0.04,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Target Amount: \Kshs ${product.targetAmount}',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: screenWidth * 0.04,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  if (isSelected) ...[
+                                    SizedBox(height: 15),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: ElevatedButton(
+                                        onPressed: () => _showDepositDialog(product.id),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blueAccent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Join Chama',
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
-                          ],
-                        ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                if (_showAnimation)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.1),
+                        child: Lottie.asset(
+                          'assets/images/success.json',
+                          controller: _animationController,
+                          fit: BoxFit.contain,
+                          onLoaded: (composition) {
+                            _animationController.duration = composition.duration;
+                          },
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -134,34 +134,7 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
                           }
                           return IconButton(
                             icon: Icon(Icons.send, color: Colors.white),
-                            onPressed: () async {
-                              final query = _searchController.text.trim();
-                              // Parse for flexsave search
-                              String? isFlexsave;
-                              String? name;
-                              String? phone;
-                              String? followup;
-                              // Simple parsing: if user types "flexsave:yes" or "flexsave:no"
-                              final flexsaveMatch = RegExp(r'flexsave\s*:\s*(yes|no)', caseSensitive: false).firstMatch(query);
-                              if (flexsaveMatch != null) {
-                                isFlexsave = flexsaveMatch.group(1);
-                              }
-                              // You can add more parsing logic for other fields if needed
-                              // For now, treat the whole query as customer name if not flexsave
-                              if (isFlexsave == null) {
-                                name = query;
-                              }
-                              // Get userId from your auth/session
-                              final userData = await SharedPreferencesHelper.getUserData();
-                              final userId = UserModel.fromJson(userData!).user.id.toString();
-                              context.read<CustomersCubit>().searchCustomers(
-                                outletId: widget.outletId,
-                                userId: userId,
-                                customerName: name,
-                                isFlexsaveCustomer: isFlexsave,
-                                // Add phone/followup if you want to parse them from the query
-                              );
-                            },
+                            onPressed: _onSearchPressed,
                           );
                         },
                       ),
@@ -389,6 +362,36 @@ class _CustomerDetailsPageState extends State<CustomerDetailsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _onSearchPressed() async {
+    final query = _searchController.text.trim();
+    String? customerName;
+    String? phone;
+    String? isFlexsaveCustomer;
+    String? customerFollowup;
+
+    if (query.toLowerCase() == 'yes' || query.toLowerCase() == 'no') {
+      isFlexsaveCustomer = query;
+    } else if (RegExp(r'^(07\d{8}|2547\d{8})$').hasMatch(query)) {
+      phone = query;
+    } else if (query.toLowerCase().startsWith('followup:')) {
+      customerFollowup = query.split(':').last.trim();
+    } else {
+      customerName = query;
+    }
+
+    final userData = await SharedPreferencesHelper.getUserData();
+    final userId = UserModel.fromJson(userData!).user.id.toString();
+
+    context.read<CustomersCubit>().searchCustomers(
+      userId: userId,
+      outletId: widget.outletId,
+      customerName: customerName,
+      phone: phone,
+      isFlexsaveCustomer: isFlexsaveCustomer,
+      customerFollowup: customerFollowup,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flexmerchandiser/utils/services/api_service.dart';
 import 'package:flexmerchandiser/exports.dart';
 
 class AuthRepo {
@@ -97,10 +98,34 @@ class AuthRepo {
   }
 
   UserModel? get userModel => _userModel;
-}
 
-// Logout function
-Future<void> logout() async {
-  await SharedPreferencesHelper.clearToken();
-  await SharedPreferencesHelper.clearUserData();
+  // Delete Account Function
+  Future<Response> deleteAccount() async {
+    // Fetch user data
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User data not found. Please login again.');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final localUserId = userModel.user.id.toString();
+
+    const String url =
+        "https://www.flexpay.co.ke/users/api/delete-customer-data";
+
+    final response = await _apiService.post(
+      url,
+      data: {
+        'user_id': localUserId,
+      },
+      requiresAuth: true,
+    );
+
+    return response;
+  }
+
+  // Logout function
+  Future<void> logout() async {
+    await SharedPreferencesHelper.clearToken();
+    await SharedPreferencesHelper.clearUserData();
+  }
 }

@@ -7,13 +7,21 @@ import 'package:flexmerchandiser/utils/services/error_handler.dart';
 
 class CustomersCubit extends Cubit<CustomersState> {
   final CustomerRepo _customerRepo;
-  String? _currentOutletId;
+
   bool _hasReachedMax = false;
   int _currentPage = 1;
 
-  CustomersCubit({required CustomerRepo customerRepo})
-    : _customerRepo = customerRepo,
-      super(const CustomersInitial());
+  // Store last search params
+  String? _lastCustomerName;
+  String? _lastPhone;
+  String? _lastIsFlexsaveCustomer;
+  String? _lastCustomerFollowup;
+  String? _lastUserId;
+  String? _lastOutletId;
+
+  int _lastPage = 1;
+
+  CustomersCubit(this._customerRepo) : super(CustomersInitial());
 
   Future<void> fetchCustomers({
   required String outletId,
@@ -21,9 +29,9 @@ class CustomersCubit extends Cubit<CustomersState> {
   bool refresh = false,
 }) async {
   try {
-    if (_currentOutletId != outletId || refresh) {
-      _currentOutletId = outletId;
-      _currentPage = 1;
+    if (_lastOutletId != outletId || refresh) {
+      _lastOutletId = outletId;
+      _lastPage = 1;
     }
     // Always reset _hasReachedMax when a new page is requested
     _hasReachedMax = false;
@@ -64,14 +72,14 @@ class CustomersCubit extends Cubit<CustomersState> {
 }
 
   Future<void> refreshCustomers() async {
-    if (_currentOutletId != null) {
-      await fetchCustomers(outletId: _currentOutletId!, refresh: true);
+    if (_lastOutletId != null) {
+      await fetchCustomers(outletId: _lastOutletId!, refresh: true);
     }
   }
 
   Future<void> searchCustomers({
-    required String outletId,
     required String userId,
+    required String outletId,
     int page = 1,
     String? customerName,
     String? phone,
@@ -80,6 +88,15 @@ class CustomersCubit extends Cubit<CustomersState> {
   }) async {
     emit(CustomersLoading());
     try {
+      // Store last search params
+      _lastUserId = userId;
+      _lastOutletId = outletId;
+      _lastCustomerName = customerName;
+      _lastPhone = phone;
+      _lastIsFlexsaveCustomer = isFlexsaveCustomer;
+      _lastCustomerFollowup = customerFollowup;
+      _lastPage = page;
+
       final data = await _customerRepo.searchCustomers(
         userId: userId,
         outletId: outletId,
@@ -97,5 +114,19 @@ class CustomersCubit extends Cubit<CustomersState> {
     } catch (e) {
       emit(CustomersError(e.toString()));
     }
+  }
+
+  // Call this to fetch a specific page with the last search filters
+  Future<void> fetchPage(int page) async {
+    if (_lastUserId == null || _lastOutletId == null) return;
+    await searchCustomers(
+      userId: _lastUserId!,
+      outletId: _lastOutletId!,
+      page: page,
+      customerName: _lastCustomerName,
+      phone: _lastPhone,
+      isFlexsaveCustomer: _lastIsFlexsaveCustomer,
+      customerFollowup: _lastCustomerFollowup,
+    );
   }
 }
