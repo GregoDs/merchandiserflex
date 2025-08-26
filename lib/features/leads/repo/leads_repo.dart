@@ -22,7 +22,7 @@ class LeadsRepo {
       print("LeadsRepo: Response data: ${response.data}");
       log("LeadsRepo: Response data: ${response.data}");
 
-      final leadJson = response.data['data']?['lead'];
+      final leadJson = response.data['data'];
       if (leadJson == null) {
         throw Exception('Lead data not found in response');
       }

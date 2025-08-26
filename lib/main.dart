@@ -1,4 +1,3 @@
-
 import 'exports.dart';
 
 void main() async {
@@ -22,23 +21,31 @@ class MyApp extends StatelessWidget {
             statusBarIconBrightness: Brightness.light,
             statusBarBrightness: Brightness.light,
           ),
-          child: MaterialApp(
-            title: 'Flexpay Promoter',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              brightness: Brightness.light,
-              primaryColor: ColorName.primaryColor,
-              scaffoldBackgroundColor: ColorName.whiteColor,
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthCubit>(
+                create: (_) => AuthCubit(AuthRepo()),
+              ),
+              // ... other providers
+            ],
+            child: MaterialApp(
+              title: 'Flexpay Promoter',
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                brightness: Brightness.light,
+                primaryColor: ColorName.primaryColor,
+                scaffoldBackgroundColor: ColorName.whiteColor,
+              ),
+              // darkTheme: ThemeData(
+              //   brightness: Brightness.dark,
+              //   primaryColor: ColorName.primaryColor,
+              //   scaffoldBackgroundColor: const Color(0xFF1A1A1A),
+              // ),
+              themeMode: ThemeMode.system,
+              routes: AppRoutes.routes,
+              // home: const StartupRedirector(),
+              home: const SplashScreen(),
             ),
-            // darkTheme: ThemeData(
-            //   brightness: Brightness.dark,
-            //   primaryColor: ColorName.primaryColor,
-            //   scaffoldBackgroundColor: const Color(0xFF1A1A1A),
-            // ),
-            themeMode: ThemeMode.system,
-            routes: AppRoutes.routes,
-            // home: const StartupRedirector(),
-            home: const SplashScreen(),
           ),
         );
       },

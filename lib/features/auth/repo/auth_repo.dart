@@ -18,9 +18,7 @@ class AuthRepo {
 
       final response = await _apiService.post(
         url,
-        data: {
-          "phone_number": phoneNumber,
-        },
+        data: {"phone_number": phoneNumber},
         requiresAuth: false,
       );
 
@@ -59,10 +57,7 @@ class AuthRepo {
 
       final response = await _apiService.post(
         url,
-        data: {
-          "phone_number": phoneNumber,
-          "otp": otp,
-        },
+        data: {"phone_number": phoneNumber, "otp": otp},
         requiresAuth: false,
       );
 
@@ -84,6 +79,11 @@ class AuthRepo {
 
       await SharedPreferencesHelper.saveUserData(response.data);
       await SharedPreferencesHelper.saveToken(responseData["token"] ?? "");
+      print("Saved token: ${responseData["token"]}");
+
+      // Set firstLaunch to false after successful login/OTP
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('firstLaunch', false);
 
       print("OTP verification succeeded: ${response.data}");
       return response;
@@ -95,6 +95,30 @@ class AuthRepo {
       print("Unexpected error during OTP verification: $e");
       rethrow;
     }
+  }
+
+  //Verify token
+  Future<Response> verifyToken(String token) async {
+    try {
+      final endpoint = dotenv.env["PROD_ENDPOINT_AUTH_VERIFYTKN"];
+      if (endpoint == null) {
+        throw Exception('PROD_ENDPOINT_AUTH_VERIFYTKN is not set in .enc');
+      }
+      final String url = "$endpoint/verify-token";
+
+      final response = await _apiService.get(
+        url,
+        requiresAuth: true,
+      );
+      return response;
+    } catch (e) {
+      print("Unexpected error during token verification: $e");
+      rethrow;
+    }
+  }
+
+  void setUserModel(UserModel userModel) {
+    _userModel = userModel;
   }
 
   UserModel? get userModel => _userModel;
@@ -114,9 +138,7 @@ class AuthRepo {
 
     final response = await _apiService.post(
       url,
-      data: {
-        'user_id': localUserId,
-      },
+      data: {'user_id': localUserId},
       requiresAuth: true,
     );
 

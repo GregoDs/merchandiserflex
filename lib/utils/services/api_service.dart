@@ -115,31 +115,52 @@ class ApiService {
     }
   }
 
+
   // Build headers with optional token
-  Future<Map<String, String>> _buildHeaders(
-    bool requiresAuth, [
-    String? url,
-  ]) async {
-    final headers = <String, String>{'Content-Type': 'application/json'};
+Future<Map<String, String>> _buildHeaders(
+  bool requiresAuth, [
+  String? url,
+]) async {
+  final headers = <String, String>{'Content-Type': 'application/json'};
 
-    if (requiresAuth) {
-      String? token;
-      // Check if this is the specific chama products endpoint
-      if (url == 'https://www.flexpay.co.ke/users/api/flex-chama/products') {
-        // Read token directly from .env for this specific endpoint
-        token = dotenv.env['CHAMA_API_TOKEN'];
-      } else {
-        // For all other authenticated requests, use the token from SharedPreferences
-        token = await SharedPreferencesHelper.getToken();
-      }
-
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
+  if (requiresAuth) {
+    final token = await SharedPreferencesHelper.getToken();
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
     }
-
-    return headers;
   }
+
+  return headers;
+}
+
+  // // Build headers with optional token
+  // Future<Map<String, String>> _buildHeaders(
+  //   bool requiresAuth, [
+  //   String? url,
+  // ]) async {
+  //   final headers = <String, String>{'Content-Type': 'application/json'};
+
+  //   if (requiresAuth) {
+  //     String? token;
+  //     // Check if this is the specific chama products endpoint
+  //     if (url == 'https://www.flexpay.co.ke/users/api/flex-chama/products') {
+  //       // Read token directly from .env for this specific endpoint
+  //       token = dotenv.env['CHAMA_API_TOKEN'];
+  //     } else {
+  //       // For all other authenticated requests, use the token from SharedPreferences
+  //       token = await SharedPreferencesHelper.getToken();
+  //     }
+
+  //     if (token != null) {
+  //       headers['Authorization'] = 'Bearer $token';
+  //     }
+  //   }
+
+  //   return headers;
+  // }
+
+
+
 
   Exception _handleDioError(DioException error) {
     if (error.response != null && error.response?.data != null) {

@@ -121,4 +121,16 @@ class ChamaRepo {
       rethrow;
     }
   }
+
+//   Future<ChamaProductsResponse> fetchChamaProducts(String type) async {
+//   final response = await _apiService.post(
+//     'https://www.flexpay.co.ke/users/api/flex-chama/products',
+//     data: {'type': type},
+//     requiresAuth: true,
+//   );
+
+//   return ChamaProductsResponse.fromJson(
+//     response.data as Map<String, dynamic>,
+//   );
+// }
 }

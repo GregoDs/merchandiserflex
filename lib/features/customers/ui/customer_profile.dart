@@ -206,7 +206,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       if (await canLaunchUrl(url)) {
         await launchUrl(url);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar( 
           SnackBar(
             content: Text(
               'Could not launch dialer with number $formattedNumber',

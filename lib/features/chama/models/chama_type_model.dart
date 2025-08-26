@@ -5,7 +5,7 @@ class ChamaProduct {
   final int monthlyPrice;
   final int targetAmount;
 
-  ChamaProduct({
+  ChamaProduct({ 
     required this.id,
     required this.name,
     required this.expirationTime,

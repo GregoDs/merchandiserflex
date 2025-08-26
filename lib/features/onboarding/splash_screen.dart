@@ -1,6 +1,5 @@
 import 'package:flexmerchandiser/exports.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -24,19 +23,6 @@ class _SplashScreenState extends State<SplashScreen>
     animation = CurvedAnimation(parent: controller, curve: Curves.linear);
 
     _checkLoginStatus();
-
-    // Timer(const Duration(seconds: 7),() => Get.offNamed(RouteHelper.getAuth()));
-    Timer(
-        const Duration(seconds: 7),
-        () => firstLaunch
-             ? Navigator.pushReplacementNamed(context, Routes.onboarding)
-             : isLoggedIn
-                 ? Navigator.pushReplacementNamed(context, Routes.home)
-                 : Navigator.pushReplacementNamed(context, Routes.login)
-        // isLoggedIn
-        //     ? Get.to(() => const MyBusiness())
-        //     : Get.to(() => const SignIn()),
-        );
   }
 
   _checkLoginStatus() async {
@@ -49,61 +35,87 @@ class _SplashScreenState extends State<SplashScreen>
       isLoggedIn = token != null && token.isNotEmpty;
       print("Token: $token");
     });
+
+    if (firstLaunch) {
+      // First launch: go to login
+      await Future.delayed(const Duration(seconds: 1));
+      Navigator.of(context).pushReplacementNamed(Routes.login);
+    } else if (isLoggedIn) {
+      // Not first launch and token exists: verify token
+      context.read<AuthCubit>().verifyTokenOnStartup();
+    } else {
+      // Not first launch, but no token: go to login
+      await Future.delayed(const Duration(seconds: 1));
+      Navigator.of(context).pushReplacementNamed(Routes.login);
+    }
   }
 
-//   @override
-// dispose() {
-//   controller.dispose(); // you need this
-//   super.dispose();
-// }
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        //statusBarColor: ColorName.primaryColor,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Container(
-            height: ScreenUtil().screenHeight,
-            width: ScreenUtil().screenWidth,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ScaleTransition(
-                  scale: animation,
-                  child: Center(
-                    child: Container(
-                      width: 330,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage("assets/icon/flexhomelogo.png"),
-                          // fit: BoxFit.cover,
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) async {
+        if (state is AuthTokenInvalid) {
+          CustomSnackBar.showError(
+            context,
+            title: "Session Ended",
+            message: "Sorry, your session has ended. Please log in again.",
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            Routes.login,
+            (route) => false,
+          );
+        } else if (state is AuthUserUpdated) {
+          Navigator.pushReplacementNamed(context, Routes.home);
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          //statusBarColor: ColorName.primaryColor,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.dark,
+        ),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: Container(
+              height: ScreenUtil().screenHeight,
+              width: ScreenUtil().screenWidth,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ScaleTransition(
+                    scale: animation,
+                    child: Center(
+                      child: Container(
+                        width: 330,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("assets/icon/flexhomelogo.png"),
+                            // fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: 180.h,
-                ),
-                const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // AppText.medium("Lipia polepole", color: ColorName.mainGrey,),
-                    // AppText.medium("Furahia matokeo",color: ColorName.mainGrey,)
-                  ],
-                ),
-                SizedBox(
-                  height: 100.h,
-                ),
-              ],
+                  SizedBox(
+                    height: 180.h,
+                  ),
+                  const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // AppText.medium("Lipia polepole", color: ColorName.mainGrey,),
+                      // AppText.medium("Furahia matokeo",color: ColorName.mainGrey,)
+                    ],
+                  ),
+                  SizedBox(
+                    height: 100.h,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -111,44 +123,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-
-// class StartupRedirector extends StatefulWidget {
-//   const StartupRedirector({super.key});
-
-//   @override
-//   State<StartupRedirector> createState() => _StartupRedirectorState();
-// }
-
-// class _StartupRedirectorState extends State<StartupRedirector> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     _navigateAfterDelay();
-//   }
-
-//   Future<void> _navigateAfterDelay() async {
-//     SharedPreferences localStorage = await SharedPreferences.getInstance();
-//     final launch = localStorage.getBool('firstLaunch') ?? true;
-//     final token = localStorage.getString('token');
-
-//     // Slight delay to ensure build has settled (optional but helps)
-//     await Future.delayed(const Duration(milliseconds: 100));
-
-//     if (launch) {
-//       Navigator.pushReplacementNamed(context, Routes.onboarding);
-//     } else if (token != null && token.isNotEmpty) {
-//       Navigator.pushReplacementNamed(context, Routes.home);
-//     } else {
-//       Navigator.pushReplacementNamed(context, Routes.login);
-//     }
-
-//     // Remove splash AFTER push to avoid flicker
-//     FlutterNativeSplash.remove();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // Do not return any visual layout to avoid white screen
-//     return const SizedBox.shrink(); // fully transparent
-//   }
-// }
